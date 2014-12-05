@@ -1,16 +1,16 @@
 <?php
-/*
-Plugin Name: Share a Draft
-Plugin URI: http://wordpress.org/extend/plugins/shareadraft/
-Description: Let your friends preview one of your drafts, without giving them permissions to edit posts in your blog.
-Author: Nikolay Bachiyski
-Version: 1.4
-Author URI: http://nikolay.bg/
-Text Domain: shareadraft
-Generated At: www.wp-fun.co.uk;
-*/ 
+/**
+ * Plugin Name:  Share a Draft
+ * Plugin URI:   http://wordpress.org/extend/plugins/shareadraft/
+ * Description:  Let your friends preview one of your drafts, without giving them permissions to edit posts in your blog.
+ * Author:       Nikolay Bachiyski, ERic Mann
+ * Version:      1.4
+ * Author URI:   http://nikolay.bg/
+ * Text Domain:  shareadraft
+ * Generated At: www.wp-fun.co.uk;
+ */
 
-if (!class_exists('ShareADraft')):
+if ( ! class_exists( 'ShareADraft' ) ):
 class ShareADraft	{
 	var $admin_options_name = "ShareADraft_options";
 
@@ -414,6 +414,6 @@ SELECT;
 }
 endif;
 
-if (class_exists('ShareADraft')) {
+if ( class_exists( 'ShareADraft' ) ) {
 	$__share_a_draft = new ShareADraft();
 }
