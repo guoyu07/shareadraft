@@ -37,14 +37,15 @@ class ShareADraft	{
 	 * Initialize the plugin, loading relevant actions and textdomains
 	 */
 	function init() {
-		global $current_user;
+		$user_id = get_current_user_id();
+
 		add_action( 'admin_menu',    array( $this, 'add_admin_pages' )         );
 		add_filter( 'the_posts',     array( $this, 'the_posts_intercept' )     );
 		add_filter( 'posts_results', array( $this, 'posts_results_intercept' ) );
 
 		$this->admin_options = $this->get_admin_options();
 		$this->admin_options = $this->clear_expired( $this->admin_options );
-		$this->user_options  = ( $current_user->id > 0 && isset( $this->admin_options[ $current_user->id ] ) ) ? $this->admin_options[ $current_user->id ] : array();
+		$this->user_options  = ( $user_id !== 0 && isset( $this->admin_options[ $user_id ] ) ) ? $this->admin_options[ $user_id ] : array();
 
 		$this->save_admin_options();
 		load_plugin_textdomain( 'shareadraft', WP_PLUGIN_DIR . '/shareadraft/languages' );
