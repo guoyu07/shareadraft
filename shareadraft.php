@@ -4,7 +4,7 @@
  * Plugin URI:   http://wordpress.org/extend/plugins/shareadraft/
  * Description:  Let your friends preview one of your drafts, without giving them permissions to edit posts in your blog.
  * Author:       Nikolay Bachiyski, ERic Mann
- * Version:      1.4
+ * Version:      1.5
  * Author URI:   http://nikolay.bg/
  * Text Domain:  shareadraft
  * Generated At: www.wp-fun.co.uk;
@@ -345,19 +345,19 @@ class ShareADraft	{
 		$drafts_struct = $this->get_drafts();
 		?>
 		<div class="wrap">
-			<h2><?php _e( 'Share a Draft', 'shareadraft' ); ?></h2>
-			<?php if ( $msg ): ?>
-				<div id="message" class="updated fade"><?php echo $msg; ?></div>
+			<h2><?php esc_html_e( 'Share a Draft', 'shareadraft' ); ?></h2>
+			<?php if ( ! empty( $msg ) ): ?>
+				<div id="message" class="updated fade"><?php echo esc_html( $msg ); ?></div>
 			<?php endif; ?>
-			<h3><?php _e( 'Currently shared drafts', 'shareadraft' ); ?></h3>
+			<h3><?php esc_html_e( 'Currently shared drafts', 'shareadraft' ); ?></h3>
 			<table class="widefat">
 				<thead>
 				<tr>
-					<th><?php _e( 'ID', 'shareadraft' ); ?></th>
-					<th><?php _e( 'Title', 'shareadraft' ); ?></th>
-					<th><?php _e( 'Link', 'shareadraft' ); ?></th>
-					<th><?php _e( 'Expires after', 'shareadraft' ); ?></th>
-					<th colspan="2" class="actions"><?php _e( 'Actions', 'shareadraft' ); ?></th>
+					<th><?php esc_html_e( 'ID', 'shareadraft' ); ?></th>
+					<th><?php esc_html_e( 'Title', 'shareadraft' ); ?></th>
+					<th><?php esc_html_e( 'Link', 'shareadraft' ); ?></th>
+					<th><?php esc_html_e( 'Expires after', 'shareadraft' ); ?></th>
+					<th colspan="2" class="actions"><?php esc_html_e( 'Actions', 'shareadraft' ); ?></th>
 				</tr>
 				</thead>
 				<tbody>
@@ -368,33 +368,33 @@ class ShareADraft	{
 					$url = get_bloginfo( 'url' ) . '/?p=' . $p->ID . '&shareadraft=' . $share['key'];
 					?>
 					<tr>
-						<td><?php echo $p->ID; ?></td>
-						<td><?php echo $p->post_title; ?></td>
+						<td><?php echo esc_html( $p->ID ); ?></td>
+						<td><?php echo esc_html( $p->post_title ); ?></td>
 						<!-- TODO: make the draft link selecatble -->
 						<td><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $url ); ?></a></td>
-						<td><?php echo $this->friendly_delta( $share['expires'] - time() ); ?></td>
+						<td><?php echo esc_html( $this->friendly_delta( $share['expires'] - time() ) ); ?></td>
 						<td class="actions">
-							<a class="shareadraft-extend edit" id="shareadraft-extend-link-<?php echo $share['key']; ?>"
-							   href="javascript:shareadraft.toggle_extend('<?php echo $share['key']; ?>');">
-								<?php _e( 'Extend', 'shareadraft' ); ?>
+							<a class="shareadraft-extend edit" id="shareadraft-extend-link-<?php echo esc_attr( $share['key'] ); ?>"
+							   href="javascript:shareadraft.toggle_extend('<?php echo esc_js( $share['key'] ); ?>');">
+								<?php esc_html_e( 'Extend', 'shareadraft' ); ?>
 							</a>
 
-							<form class="shareadraft-extend" id="shareadraft-extend-form-<?php echo $share['key']; ?>"
+							<form class="shareadraft-extend" id="shareadraft-extend-form-<?php echo esc_attr( $share['key'] ); ?>"
 							      action="" method="post">
 								<input type="hidden" name="action" value="extend" />
-								<input type="hidden" name="key" value="<?php echo $share['key']; ?>" />
+								<input type="hidden" name="key" value="<?php echo esc_attr( $share['key'] ); ?>" />
 								<input type="submit" class="button" name="shareadraft_extend_submit"
-								       value="<?php echo attribute_escape( __( 'Extend', 'shareadraft' ) ); ?>" />
-								<?php _e( 'by', 'shareadraft' ); ?>
+								       value="<?php echo esc_attr__( 'Extend', 'shareadraft' ); ?>" />
+								<?php esc_html_e( 'by', 'shareadraft' ); ?>
 								<?php echo $this->tmpl_measure_select(); ?>
 								<a class="shareadraft-extend-cancel"
-								   href="javascript:shareadraft.cancel_extend('<?php echo $share['key']; ?>');">
-									<?php _e( 'Cancel', 'shareadraft' ); ?>
+								   href="javascript:shareadraft.cancel_extend('<?php echo esc_js( $share['key'] ); ?>');">
+									<?php esc_html_e( 'Cancel', 'shareadraft' ); ?>
 								</a>
 							</form>
 						</td>
 						<td class="actions">
-							<a class="delete" href="edit.php?page=<?php echo plugin_basename( __FILE__ ); ?>&amp;action=delete&amp;key=<?php echo $share['key']; ?>"><?php _e( 'Delete', 'shareadraft' ); ?></a>
+							<a class="delete" href="edit.php?page=<?php echo plugin_basename( __FILE__ ); ?>&amp;action=delete&amp;key=<?php echo esc_attr( $share['key'] ); ?>"><?php esc_html_e( 'Delete', 'shareadraft' ); ?></a>
 						</td>
 					</tr>
 				<?php
@@ -402,32 +402,32 @@ class ShareADraft	{
 				if ( empty( $s ) ):
 					?>
 					<tr>
-						<td colspan="5"><?php _e( 'No shared drafts!', 'shareadraft' ); ?></td>
+						<td colspan="5"><?php esc_html_e( 'No shared drafts!', 'shareadraft' ); ?></td>
 					</tr>
 				<?php
 				endif;
 				?>
 				</tbody>
 			</table>
-			<h3><?php _e( 'Share a Draft', 'shareadraft' ); ?></h3>
+			<h3><?php esc_html_e( 'Share a Draft', 'shareadraft' ); ?></h3>
 
 			<form id="shareadraft-share" action="" method="post">
 				<p>
 					<select id="shareadraft-postid" name="post_id">
-						<option value=""><?php _e( 'Choose a draft', 'shareadraft' ); ?></option>
+						<option value=""><?php esc_html_e( 'Choose a draft', 'shareadraft' ); ?></option>
 						<?php
 						foreach ( $drafts_struct as $draft_type ):
 							if ( $draft_type[1] ):
 								?>
 								<option value="" disabled="disabled"></option>
-								<option value="" disabled="disabled"><?php echo $draft_type[0]; ?></option>
+								<option value="" disabled="disabled"><?php echo esc_html( $draft_type[0] ); ?></option>
 								<?php
 								foreach ( $draft_type[2] as $draft ):
 									if ( empty( $draft->post_title ) ) {
 										continue;
 									}
 									?>
-									<option value="<?php echo $draft->ID ?>"><?php echo wp_specialchars( $draft->post_title ); ?></option>
+									<option value="<?php echo esc_attr( $draft->ID ); ?>"><?php echo esc_html( $draft->post_title ); ?></option>
 								<?php
 								endforeach;
 							endif;
@@ -437,8 +437,8 @@ class ShareADraft	{
 				</p>
 				<p>
 					<input type="submit" class="button" name="shareadraft_submit"
-					       value="<?php echo attribute_escape( __( 'Share it', 'shareadraft' ) ); ?>" />
-					<?php _e( 'for', 'shareadraft' ); ?>
+					       value="<?php echo esc_attr( __( 'Share it', 'shareadraft' ) ); ?>" />
+					<?php esc_html_e( 'for', 'shareadraft' ); ?>
 					<?php echo $this->tmpl_measure_select(); ?>.
 				</p>
 			</form>
