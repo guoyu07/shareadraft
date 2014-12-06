@@ -1,9 +1,9 @@
 === Share a Draft ===
-Contributors: nbachiyski
+Contributors: nbachiyski, ericmann
 Tags: post, post, draft, posts, drafts, share, sharing
 Requires at least: 3.2
-Tested up to: 3.3
-Stable tag: 1.4
+Tested up to: 4.1
+Stable tag: 1.5
 
 Let your friends preview one of your drafts, without giving them permissions to edit posts in your blog
 
@@ -29,6 +29,10 @@ e.g.
 1. The screen at Manage -> Share a Draft lets you choose a draft and monitor/delete your previous shares.
 
 == Changelog ==
+
+= 1.5 =
+* Update output to be VIP compliant and secure
+* Remove references to "others posts" since it doesn't make sense to share something not yours
 
 = 1.4 =
 * Included your own scheduled posts to the list
