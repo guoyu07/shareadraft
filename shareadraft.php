@@ -24,6 +24,11 @@ class ShareADraft	{
 	 */
 	protected $user_options = array();
 
+	/**
+	 * @var WP_Post|null Shared post object
+	 */
+	protected $shared_post = null;
+
 	function __construct() {
 		add_action( 'init', array( $this, 'init' ) );
 	}
@@ -75,10 +80,12 @@ class ShareADraft	{
 	 * Update user options in the database for the current user
 	 */
 	function save_admin_options() {
-		global $current_user;
-		if ( $current_user->id > 0 ) {
-			$this->admin_options[ $current_user->id ] = $this->user_options;
+		$user_id = get_current_user_id();
+
+		if ( $user_id !== 0 ) {
+			$this->admin_options[ $user_id ] = $this->user_options;
 		}
+
 		update_option( $this->admin_options_name, $this->admin_options );
 	}
 
@@ -126,10 +133,18 @@ class ShareADraft	{
 	function calculate_seconds( $params ) {
 		$exp      = 60;
 		$multiply = 60;
+
+		// Allow the expiration to be overridden
 		if ( isset( $params['expires'] ) && ( $e = intval( $params['expires'] ) ) ) {
 			$exp = $e;
 		}
-		$multiples = array( 's' => 1, 'm' => 60, 'h' => 3600, 'd' => 24 * 3600 );
+
+		$multiples = array(
+			's' => 1,
+			'm' => MINUTE_IN_SECONDS,
+			'h' => HOUR_IN_SECONDS,
+			'd' => DAY_IN_SECONDS,
+		);
 		if ( isset( $params['measure'] ) && isset( $multiples[ $params['measure'] ] ) ) {
 			$multiply = $multiples[ $params['measure'] ];
 		}
@@ -141,30 +156,38 @@ class ShareADraft	{
 	 * Process post options
 	 *
 	 * @param array $params
+	 *
+	 * @return string
 	 */
 	function process_post_options( $params ) {
-		global $current_user;
 		if ( isset( $params['post_id'] ) ) {
-			$p = get_post( $params['post_id'] );
-			if ( ! $p ) {
+			$post = get_post( $params['post_id'] );
+			if ( null === $post ) {
 				return __( 'There is no such post!', 'shareadraft' );
 			}
-			if ( 'publish' == get_post_status( $p ) ) {
+			if ( 'publish' === get_post_status( $post ) ) {
 				return __( 'The post is published!', 'shareadraft' );
 			}
+
 			$this->user_options['shared'][] = array(
-				'id'      => $p->ID,
+				'id'      => $post->ID,
 				'expires' => time() + $this->calculate_seconds( $params ),
-				'key'     => uniqid( 'baba' . $p->ID . '_' )
+				'key'     => uniqid( 'shareadraft' . $post->ID . '_' )
 			);
+
 			$this->save_admin_options();
 		}
+
+		// Empty return
+		return '';
 	}
 
 	/**
 	 * Process the removal of a shared post.
 	 *
 	 * @param array $params
+	 *
+	 * @return string
 	 */
 	function process_delete( $params ) {
 		if ( ! isset( $params['key'] ) ||
@@ -182,12 +205,17 @@ class ShareADraft	{
 		}
 		$this->user_options['shared'] = $shared;
 		$this->save_admin_options();
+
+		// Empty return
+		return '';
 	}
 
 	/**
 	 * Process the extension of an expiration date.
 	 *
 	 * @param array $params
+	 *
+	 * @return string
 	 */
 	function process_extend( $params ) {
 		if ( ! isset( $params['key'] ) ||
@@ -205,6 +233,9 @@ class ShareADraft	{
 		}
 		$this->user_options['shared'] = $shared;
 		$this->save_admin_options();
+
+		// Empty return
+		return '';
 	}
 
 	/**
@@ -213,34 +244,23 @@ class ShareADraft	{
 	 * @return array
 	 */
 	function get_drafts() {
-		global $current_user;
-		$my_drafts = get_users_drafts($current_user->id);
-		$my_scheduled = $this->get_users_future($current_user->id);
-		$pending = get_others_pending($current_user->id);
-		$others_drafts = get_others_drafts($current_user->id);
-		$drafts_struct = array(
+		$user_id = get_current_user_id();
+
+		$my_drafts = get_users_drafts( $user_id );
+		$my_scheduled = $this->get_users_future( $user_id );
+
+		return array(
 			array(
-				__('Your Drafts:', 'shareadraft'),
-				count($my_drafts),
+				__( 'Your Drafts:', 'shareadraft' ),
+				count( $my_drafts ),
 				$my_drafts,
 			),
 			array(
-				__('Your Scheduled Posts:', 'shareadraft'),
-				count($my_scheduled),
+				__( 'Your Scheduled Posts:', 'shareadraft' ),
+				count( $my_scheduled ),
 				$my_scheduled,
 			),
-			array(
-				__('Pending Review:', 'shareadraft'),
-				count($pending),
-				$pending,
-			),
-			array(
-				__('Others&#8217; Drafts:', 'shareadraft'),
-				count($others_drafts),
-				$others_drafts,
-			),
 		);
-		return $drafts_struct; 
 	}
 
 	/**
@@ -271,8 +291,9 @@ class ShareADraft	{
 	}
 
 	/**
+	 * Display a friendly timestamp
 	 *
-	 * @param $s
+	 * @param int $s Time in seconds
 	 *
 	 * @return string
 	 */
@@ -294,16 +315,16 @@ class ShareADraft	{
 		}
 		$names = array();
 		if ( isset( $res[0] ) ) {
-			$names[] = sprintf( __ngettext( '%d second', '%d seconds', $res[0], 'shareadraft' ), $res[0] );
+			$names[] = sprintf( _n( '%d second', '%d seconds', $res[0], 'shareadraft' ), $res[0] );
 		}
 		if ( isset( $res[1] ) ) {
-			$names[] = sprintf( __ngettext( '%d minute', '%d minutes', $res[1], 'shareadraft' ), $res[1] );
+			$names[] = sprintf( _n( '%d minute', '%d minutes', $res[1], 'shareadraft' ), $res[1] );
 		}
 		if ( isset( $res[2] ) ) {
-			$names[] = sprintf( __ngettext( '%d hour', '%d hours', $res[2], 'shareadraft' ), $res[2] );
+			$names[] = sprintf( _n( '%d hour', '%d hours', $res[2], 'shareadraft' ), $res[2] );
 		}
 		if ( isset( $res[3] ) ) {
-			$names[] = sprintf( __ngettext( '%d day', '%d days', $res[3], 'shareadraft' ), $res[3] );
+			$names[] = sprintf( _n( '%d day', '%d days', $res[3], 'shareadraft' ), $res[3] );
 		}
 
 		return implode( ', ', array_reverse( $names ) );
@@ -441,7 +462,7 @@ class ShareADraft	{
 			}
 			$shares = $option['shared'];
 			foreach ( $shares as $share ) {
-				if ( $share['id'] == $post_id && $share['key'] == $_GET['shareadraft'] ) {
+				if ( $share['id'] === $post_id && $share['key'] === $_GET['shareadraft'] ) {
 					return true;
 				}
 			}
@@ -458,12 +479,12 @@ class ShareADraft	{
      * @return mixed
 	 */
 	function posts_results_intercept( $posts ) {
-		if ( 1 != count( $posts ) ) {
+		if ( 1 !== count( $posts ) ) {
 			return $posts;
 		}
 		$post   = $posts[0];
 		$status = get_post_status( $post );
-		if ( 'publish' != $status && $this->can_view( $post->ID ) ) {
+		if ( 'publish' !== $status && $this->can_view( $post->ID ) ) {
 			$this->shared_post = $post;
 		}
 
@@ -493,10 +514,10 @@ class ShareADraft	{
 	 * @return string
 	 */
 	function tmpl_measure_select() {
-		$secs  = __( 'seconds', 'shareadraft' );
-		$mins  = __( 'minutes', 'shareadraft' );
-		$hours = __( 'hours', 'shareadraft' );
-		$days  = __( 'days', 'shareadraft' );
+		$secs  = esc_html__( 'seconds', 'shareadraft' );
+		$mins  = esc_html__( 'minutes', 'shareadraft' );
+		$hours = esc_html__( 'hours', 'shareadraft' );
+		$days  = esc_html__( 'days', 'shareadraft' );
 
 		return <<<SELECT
 			<input name="expires" type="text" value="2" size="4"/>
@@ -545,18 +566,19 @@ SELECT;
 				$( function () {
 					$( 'form.shareadraft-extend' ).hide();
 					$( 'a.shareadraft-extend' ).show();
-					$( 'a.shareadraft-extend-cancel' ).show();
-					$( 'a.shareadraft-extend-cancel' ).css( 'display', 'inline' );
+					$( 'a.shareadraft-extend-cancel' ).show().css( 'display', 'inline' );
 				} );
 				window.shareadraft = {
 					toggle_extend: function ( key ) {
-						$( '#shareadraft-extend-form-' + key ).show();
-						$( '#shareadraft-extend-link-' + key ).hide();
-						$( '#shareadraft-extend-form-' + key + ' input[name="expires"]' ).focus();
+						var form = $( document.getElementById( 'shareadraft-extend-form-' + key ) );
+
+						$( document.getElementById( 'shareadraft-extend-link-' + key ) ).hide();
+						form.show();
+						form.find( 'input[name="expires"]' ).focus();
 					},
 					cancel_extend: function ( key ) {
-						$( '#shareadraft-extend-form-' + key ).hide();
-						$( '#shareadraft-extend-link-' + key ).show();
+						$( document.getElementById( 'shareadraft-extend-form-' + key ) ).hide();
+						$( document.getElementById( 'shareadraft-extend-link-' + key ) ).show();
 					}
 				};
 			})( jQuery );
